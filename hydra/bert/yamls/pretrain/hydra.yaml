@@ -1,0 +1,105 @@
+data_local: /scratch/data/datasets/c4
+data_remote: # If blank, files must be present in data_local
+
+max_seq_len: 128
+tokenizer_name: bert-base-uncased
+mlm_probability: 0.30
+
+# Run Name
+run_name: hydra
+
+# Model
+model:
+  name: bert
+  use_pretrained: false # Train the model from scratch. Set to true to start from the HF off-the-shelf weights.
+  pretrained_model_name: ${tokenizer_name}
+  tokenizer_name: ${tokenizer_name}
+  model_config:
+    num_hidden_layers: 23
+    max_position_embedding: ${max_seq_len}
+
+    use_position_embeddings: False
+    hidden_size: 768
+
+# Dataloaders
+train_loader:
+  name: text
+  dataset:
+    local: ${data_local}
+    remote: ${data_remote}
+    split: train
+    tokenizer_name: ${tokenizer_name}
+    max_seq_len: ${max_seq_len}
+    shuffle: true
+    mlm_probability: ${mlm_probability}
+  drop_last: true
+  num_workers: 8
+
+eval_loader:
+  name: text
+  dataset:
+    local: ${data_local}
+    remote: ${data_remote}
+    split: val
+    tokenizer_name: ${tokenizer_name}
+    max_seq_len: ${max_seq_len}
+    shuffle: false
+    mlm_probability: 0.15 # We always evaluate at 15% masking for consistent comparison
+  drop_last: false
+  num_workers: 8
+
+# Optimization
+scheduler:
+  name: linear_decay_with_warmup
+  t_warmup: 0.06dur # Warmup to the full LR for 6% of the training duration
+  alpha_f: 0.02 # Linearly decay to 0.02x the full LR by the end of the training duration
+
+optimizer:
+  name: decoupled_adamw
+  lr: 0.0e-4 # Peak learning rate
+  betas:
+  - 0.9
+  - 0.98
+  eps: 1.0e-06
+  weight_decay: 1.0e-5 # Amount of weight decay regularization
+
+algorithms:
+  gradient_clipping: {
+    clipping_type: 'norm',
+    clipping_threshold: 1.0
+  }
+
+max_duration: 286720048sp # Subsample the training data for ~275M samples
+eval_interval: 1sp
+global_train_batch_size: 16
+
+# System
+seed: 17
+device_eval_batch_size: 128
+device_train_microbatch_size: 16
+# device_train_microbatch_size: auto
+precision: amp_bf16
+
+# Logging
+progress_bar: false
+log_to_console: true
+console_log_interval: 1ba
+
+
+callbacks:
+  speed_monitor:
+    window_size: 500
+  lr_monitor: {}
+
+# (Optional) W&B logging
+loggers:
+  wandb:
+    project: pretrain  # Fill this in
+    entity: mamba-evolutions # Fill this in
+
+# Checkpoint
+save_interval: 1000ba
+save_num_checkpoints_to_keep: 3
+save_folder: /scratch/mamba/m2/${run_name}
+
+load_path: /home/ag-cmu/june/hydra_private/hydra_final.pt
