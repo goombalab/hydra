@@ -39,7 +39,7 @@ y = model(x)
 assert y.shape == x.shape
 ```
 
-### Matirx Mixer Block
+### Matrix Mixer Block
 
 The matrix mixer framework is implemented at [./hydra/modules/matrix_mixer.py](./hydra/modules/matrix_mixer.py).\
 You can easily integrate your own mixer matrix by following our implementations of various sequence mixers located at [./hydra/modules/matrix_mixers/](./hydra/modules/matrix_mixers/)!
