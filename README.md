@@ -85,6 +85,9 @@ Finetune Hydra on GLUE:
 python glue.py yamls/finetune/hydra.yaml
 ```
 
+### Pretrained Weights
+Weights of Hydra with 23layers pretrained on C4 are uploaded to [HuggingFace](https://huggingface.co/goombalab/hydra).
+
 ## Acknowledgement
 We thank the authors of [Mamba](https://github.com/state-spaces/mamba), [MosaicBERT](https://github.com/mosaicml/examples/tree/main/examples/benchmarks/bert), and [M2](https://github.com/HazyResearch/m2) for their wonderful codebases.
 
