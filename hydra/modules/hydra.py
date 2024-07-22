@@ -15,8 +15,11 @@ except ImportError:
 
 from mamba_ssm.ops.triton.ssd_combined import mamba_chunk_scan_combined
 
+from hydra.modules.ops import hydra_split_conv1d_scan_combined
+
 
 class Hydra(nn.Module):
+
     def __init__(
         self,
         d_model,
@@ -36,6 +39,7 @@ class Hydra(nn.Module):
         conv_bias=True,
         # Fused kernel and sharding options
         chunk_size=256,
+        use_mem_eff_path=False,
         layer_idx=None,  # Absorb kwarg for general module
         device=None,
         dtype=None,
@@ -56,6 +60,7 @@ class Hydra(nn.Module):
         self.learnable_init_states = learnable_init_states
         self.activation = activation
         self.chunk_size = chunk_size
+        self.use_mem_eff_path = use_mem_eff_path
         self.layer_idx = layer_idx
 
         # Order: [z, x, B, C, dt]
@@ -124,6 +129,29 @@ class Hydra(nn.Module):
         A = -torch.exp(self.A_log.float())  # (nheads) or (d_inner, d_state)
         initial_states = repeat(self.init_states, "... -> b ...", b=2*batch) if self.learnable_init_states else None
         dt_limit_kwargs = {} if self.dt_limit == (0.0, float("inf")) else dict(dt_limit=self.dt_limit)
+
+        if self.use_mem_eff_path:
+            return hydra_split_conv1d_scan_combined(
+                zxbcdt,
+                self.conv1d.weight,
+                self.conv1d.bias,
+                self.dt_limit,
+                self.dt_bias,
+                A,
+                self.fc_D.weight,
+                self.D,
+                self.norm.weight,
+                self.norm.eps,
+                self.out_proj.weight,
+                self.out_proj.bias,
+                self.chunk_size,
+                initial_states,
+                seq_idx,
+                self.d_inner,
+                self.d_state,
+                self.headdim,
+                self.ngroups,
+            )
 
         z, xBC, dt = torch.split(
             zxbcdt,
