@@ -12,7 +12,7 @@ def maxdiff(a, b):
 
 def test_and_benchmark_meff():
     device = torch.device("cuda")
-    x = torch.randn(1, 196352, 512, device=device)
+    x = torch.randn(1, 2**17, 512, device=device)
 
     hydra_meff = Hydra(512, learnable_init_states=True, bias=True, use_mem_eff_path=True)
     hydra_meff.to(device)
