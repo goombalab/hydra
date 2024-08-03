@@ -34,6 +34,7 @@ model = Hydra(
     d_state=64,  # SSM state expansion factor
     d_conv=7,    # Local non-causal convolution width
     expand=2,    # Block expansion factor
+    use_mem_eff_path=False,    # Nightly release. Thanks to Alston Lo
 ).to("cuda")
 y = model(x)
 assert y.shape == x.shape
