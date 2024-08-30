@@ -54,6 +54,12 @@ class BertEmbeddings(nn.Module):
                 config.max_position_embeddings, config.hidden_size)
             self.register_buffer(
                 "position_ids", torch.arange(config.max_position_embeddings).expand((1, -1)))
+        
+        self.use_species_embeddings = config.use_species_embeddings
+        if config.use_species_embeddings:
+            self.species_embeddings = nn.Embedding(config.max_num_species,
+                                                  config.hidden_size)
+
 
         self.token_type_embeddings = nn.Embedding(config.type_vocab_size,
                                                   config.hidden_size)
@@ -74,6 +80,7 @@ class BertEmbeddings(nn.Module):
         token_type_ids: Optional[torch.LongTensor] = None,
         position_ids: Optional[torch.LongTensor] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
+        species_id: Optional[torch.LongTensor] = None,
         past_key_values_length: int = 0
     ) -> torch.Tensor:
         if (input_ids is not None) == (inputs_embeds is not None):
@@ -111,6 +118,12 @@ class BertEmbeddings(nn.Module):
                 position_ids = self.position_ids[:, past_key_values_length : seq_length + past_key_values_length]
             position_embeddings = self.position_embeddings(position_ids)
             embeddings = embeddings + position_embeddings
+            
+        if self.use_species_embeddings:
+            if species_id is None:
+                    raise ValueError('Must specify species_id!')
+            species_embeddings = self.species_embeddings(species_id)
+            embeddings += species_embeddings
 
         embeddings = self.LayerNorm(embeddings)
         embeddings = self.dropout(embeddings)
@@ -425,6 +438,7 @@ class BertModel(BertPreTrainedModel):
         token_type_ids: Optional[torch.Tensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.Tensor] = None,
+        species_id: Optional[torch.Tensor] = None,
         output_all_encoded_layers: Optional[bool] = False,
         masked_tokens_mask: Optional[torch.Tensor] = None,
         **kwargs
@@ -438,7 +452,8 @@ class BertModel(BertPreTrainedModel):
         embedding_output = self.embeddings(
             input_ids=input_ids, 
             token_type_ids=token_type_ids,
-            position_ids=position_ids
+            position_ids=position_ids,
+            species_id=species_id
         )
 
         subset_mask = []
@@ -590,6 +605,7 @@ class BertForMaskedLM(BertPreTrainedModel):
         attention_mask: Optional[torch.Tensor] = None,
         token_type_ids: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.Tensor] = None,
+        species_id: Optional[torch.Tensor] = None,
         head_mask: Optional[torch.Tensor] = None,
         inputs_embeds: Optional[torch.Tensor] = None,
         encoder_hidden_states: Optional[torch.Tensor] = None,
@@ -624,6 +640,7 @@ class BertForMaskedLM(BertPreTrainedModel):
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
             position_ids=position_ids,
+            species_id=species_id,
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
             encoder_hidden_states=encoder_hidden_states,
