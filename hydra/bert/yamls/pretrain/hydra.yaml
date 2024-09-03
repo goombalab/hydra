@@ -1,4 +1,4 @@
-data_local: ../datasets/batchlarge_embed
+data_local: ../../../../datasets/full_embed
 data_remote: # If blank, files must be present in data_local
 
 max_seq_len: 512
@@ -23,7 +23,7 @@ model:
 
 # Dataloaders
 train_loader:
-  name: text
+  name: dna
   dataset:
     local: ${data_local}
     remote: ${data_remote}
@@ -36,11 +36,11 @@ train_loader:
   num_workers: 8
 
 eval_loader:
-  name: text
+  name: dna
   dataset:
     local: ${data_local}
     remote: ${data_remote}
-    split: val
+    split: test
     tokenizer_name: ${tokenizer_name}
     max_seq_len: ${max_seq_len}
     shuffle: false
@@ -102,4 +102,4 @@ save_interval: 1000ba
 save_num_checkpoints_to_keep: 50
 save_folder: ./local-bert-checkpoints/${run_name}
 
-load_path: /home/ag-cmu/june/hydra_private/hydra_final.pt
+#load_path: /home/ag-cmu/june/hydra_private/hydra_final.pt
