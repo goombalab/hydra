@@ -478,10 +478,12 @@ class BertModel(BertPreTrainedModel):
                 sequence_output, mask = attention_mask) if self.pooler is not None else None
         else:
             # TD [2022-03-01]: the indexing here is very tricky.
-            attention_mask_bool = attention_mask.bool()
-            subset_idx = subset_mask[attention_mask_bool]  # type: ignore
-            sequence_output = encoder_outputs[-1][
-                masked_tokens_mask[attention_mask_bool][subset_idx]]
+            if not output_all_encoded_layers:
+                attention_mask_bool = attention_mask.bool()
+                subset_idx = subset_mask[attention_mask_bool]  # type: ignore
+                map = masked_tokens_mask[attention_mask_bool][subset_idx]
+                sequence_output = encoder_outputs[-1][map]        
+            
             if self.pooler is not None:
                 pool_input = encoder_outputs[-1][
                     first_col_mask[attention_mask_bool][subset_idx]]
@@ -649,13 +651,19 @@ class BertForMaskedLM(BertPreTrainedModel):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
             masked_tokens_mask=masked_tokens_mask,
+            output_all_encoded_layers=output_hidden_states,
         )
 
-        sequence_output = outputs[0]
-        prediction_scores = self.cls(sequence_output)
+        if output_hidden_states:
+            prediction_scores = None
+            hidden_states = outputs[0]
+        else:
+            sequence_output = outputs[0]
+            prediction_scores = self.cls(sequence_output)
+            hidden_states = None
 
         loss = None
-        if labels is not None:
+        if labels is not None and not output_hidden_states:
             # Compute loss
             loss_fct = nn.CrossEntropyLoss()
 
@@ -678,7 +686,7 @@ class BertForMaskedLM(BertPreTrainedModel):
         return MaskedLMOutput(
             loss=loss,
             logits=prediction_scores,
-            hidden_states=None,
+            hidden_states=hidden_states,
             attentions=None,
         )
 
