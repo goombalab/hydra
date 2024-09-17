@@ -658,7 +658,6 @@ class BertForMaskedLM(BertPreTrainedModel):
             prediction_scores = None
             hidden_states = outputs[0]
         else:
-            sequence_output = outputs[0]
             prediction_scores = self.cls(sequence_output)
             hidden_states = None
 

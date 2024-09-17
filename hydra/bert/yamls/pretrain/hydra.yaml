@@ -6,7 +6,7 @@ tokenizer_name: gagneurlab/SpeciesLM
 mlm_probability: 0.025
 
 # Run Name
-run_name: hydra_embed
+run_name: hydra_embed_correct
 
 # Model
 model:
@@ -20,6 +20,8 @@ model:
 
     use_position_embeddings: False
     hidden_size: 768
+    use_species_embeddings: True
+    max_num_species: 4096
 
 # Dataloaders
 train_loader:
