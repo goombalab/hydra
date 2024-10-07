@@ -10,6 +10,9 @@ class BertConfig(TransformersBertConfig):
         self,
         attention_probs_dropout_prob: float = 0.0,
         use_position_embeddings: bool = False,
+        # species embeddings
+        use_species_embeddings: bool = False,
+        max_num_species: int = 512,
         matrix_mixer_type: str = 'hydra',
         is_prenorm: bool = False,
         d_conv: int = 7,
@@ -35,6 +38,10 @@ class BertConfig(TransformersBertConfig):
         super().__init__(
             attention_probs_dropout_prob=attention_probs_dropout_prob, **kwargs)
         self.use_position_embeddings = use_position_embeddings
+        # Species Embedding
+        self.use_species_embeddings = use_species_embeddings
+        self.max_num_species = max_num_species
+        
         self.matrix_mixer_type = matrix_mixer_type
         self.is_prenorm = is_prenorm
 
@@ -44,6 +51,7 @@ class BertConfig(TransformersBertConfig):
 
         # Hydra Configurations
         self.d_state = d_state
+
 
         # Matrix Mixer Configurations
         self.is_data_dependent = is_data_dependent  # Boolean flag for SAM

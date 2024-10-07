@@ -15,7 +15,7 @@ except ImportError:
 
 from mamba_ssm.ops.triton.ssd_combined import mamba_chunk_scan_combined
 
-from hydra.modules.ops import hydra_split_conv1d_scan_combined
+from .ops import hydra_split_conv1d_scan_combined
 
 
 class Hydra(nn.Module):
